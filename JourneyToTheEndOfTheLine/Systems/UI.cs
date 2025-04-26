@@ -28,7 +28,15 @@ namespace JourneyToTheEndOfTheLine.Systems
 
         public static void DisplayTitle(string title)
         {
-            Console.Clear();
+            try
+            {
+                Console.Clear();
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("(Console clear not supported on this system.)");
+            }
+
             Console.WriteLine("==============================");
             Console.WriteLine($"  {title.ToUpper()}");
             Console.WriteLine("==============================\n");

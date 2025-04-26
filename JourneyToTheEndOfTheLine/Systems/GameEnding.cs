@@ -11,7 +11,15 @@ namespace JourneyToTheEndOfTheLine.Systems
     {
         public static void Show(GameState state)
         {
-            Console.Clear();
+            try
+            {
+                Console.Clear();
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("(Console clear not supported on this system.)");
+            }
+
             Console.ForegroundColor = ConsoleColor.Cyan;
 
             Console.WriteLine("\n\nYou stand at the edge of the world...");

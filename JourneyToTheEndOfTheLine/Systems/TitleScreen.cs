@@ -11,7 +11,15 @@ namespace JourneyToTheEndOfTheLine.Systems
     {
         public static void Show()
         {
-            Console.Clear();
+            try
+            {
+                Console.Clear();
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("(Console clear not supported on this system.)");
+            }
+
             Console.ForegroundColor = ConsoleColor.Gray;
 
             string[] baseLines = new string[]

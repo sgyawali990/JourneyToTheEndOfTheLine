@@ -74,6 +74,60 @@ namespace JourneyToTheEndOfTheLine.Acts
                             UI.TypeText("A shrine fragment glows briefly. It accepts nothing — not yet.");
                             return true;
 
+                        case 'S':
+                            if (!state.Choices.ContainsKey("StatuePuzzleSolved"))
+                            {
+                                UI.TypeText("Three broken statues float in the clouds, each whispering cryptic truths...");
+                                UI.TypeText("One tells the truth, one lies, and one answers at random.");
+                                UI.TypeText("Choose carefully.");
+
+                                GuardianStatue[] statues = new GuardianStatue[3];
+                                statues[0] = new TruthStatue();
+                                statues[1] = new LiarStatue();
+                                statues[2] = new RandomStatue();
+
+                                Random rand = new Random();
+                                for (int i = 0; i < statues.Length; i++)
+                                {
+                                    int swapIndex = rand.Next(i, statues.Length);
+                                    var temp = statues[i];
+                                    statues[i] = statues[swapIndex];
+                                    statues[swapIndex] = temp;
+                                }
+
+                                Console.Write("Pick a statue (1, 2, or 3): ");
+                                string input = Console.ReadLine().Trim();
+                                if (int.TryParse(input, out int selected) && selected >= 1 && selected <= 3)
+                                {
+                                    UI.TypeText($"The statue says: \"{statues[selected - 1].Respond()}\"");
+                                    Console.Write("Dig here? (yes/no): ");
+                                    string digChoice = Console.ReadLine().Trim().ToLower();
+
+                                    if (digChoice == "yes" && statues[selected - 1] is TruthStatue)
+                                    {
+                                        UI.TypeText("Beneath the clouds, you find a hidden artifact!");
+                                        Console.Beep(1000, 200);
+                                        Console.Beep(1200, 300);
+                                        state.Inventory.AddItem("Celestial Relic");
+                                        state.Choices["StatuePuzzleSolved"] = true;
+                                    }
+                                    else
+                                    {
+                                        UI.TypeText("You find nothing but mist.");
+                                        Console.Beep(300, 300);
+                                    }
+                                }
+                                else
+                                {
+                                    UI.TypeText("The statues remain silent, confused by your indecision.");
+                                }
+                            }
+                            else
+                            {
+                                UI.TypeText("The statues are silent now.");
+                            }
+                            return true;
+
                         case 'R':
                             if (!ritualDone)
                             {
@@ -165,6 +219,36 @@ namespace JourneyToTheEndOfTheLine.Acts
             UI.TypeText("The heavens tremble. A new era begins.");
             state.Act3Completed = true;
             UI.Pause();
+        }
+
+        abstract class GuardianStatue
+        {
+            public abstract string Respond();
+        }
+
+        class TruthStatue : GuardianStatue
+        {
+            public override string Respond()
+            {
+                return "The key is beneath my feet.";
+            }
+        }
+
+        class LiarStatue : GuardianStatue
+        {
+            public override string Respond()
+            {
+                return "The key is not beneath my feet.";
+            }
+        }
+
+        class RandomStatue : GuardianStatue
+        {
+            private Random random = new Random();
+            public override string Respond()
+            {
+                return random.Next(0, 2) == 0 ? "The key is beneath my feet." : "The key is not beneath my feet.";
+            }
         }
     }
 }

@@ -3,31 +3,39 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System;
 
-namespace JourneyToTheEndOfTheLine.Systems {
-    public class Map {
+namespace JourneyToTheEndOfTheLine.Systems
+{
+    public class Map
+    {
         public char[,] Grid { get; private set; }
         public int Width => Grid.GetLength(1);
         public int Height => Grid.GetLength(0);
         public int PlayerX { get; set; }
         public int PlayerY { get; set; }
 
-        public Map(char[,] grid, int startX, int startY) {
+        public Map(char[,] grid, int startX, int startY)
+        {
             Grid = grid;
             PlayerX = startX;
             PlayerY = startY;
         }
 
-        public void Draw() {
+        public void Draw()
+        {
             Console.Clear();
-            for (int y = 0; y < Height; y++) {
-                for (int x = 0; x < Width; x++) {
-                    if (x == PlayerX && y == PlayerY) {
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    if (x == PlayerX && y == PlayerY)
+                    {
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.Write("@");
-                    } else {
-                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = GetTileColor(Grid[y, x]);
                         Console.Write(GetTileSymbol(Grid[y, x]));
                     }
                 }
@@ -40,13 +48,13 @@ namespace JourneyToTheEndOfTheLine.Systems {
         {
             return tile switch
             {
-                '#' => "█",   // Wall/Boundary
+                '#' => "█",   // Wall
                 'B' => "♣",   // Bush
                 'W' => "≈",   // Whirlpool
                 'C' => "☁",   // Cloud
-                'T' => "!",   // Threat (Beastman or glitch tile)
-                'R' => "⊙",   // Ritual zone
-                'O' => "✦",   // Offering Site (Act 3)
+                'T' => "!",   // Threat
+                'R' => "⊙",   // Ritual Site
+                'O' => "✦",   // Offering
                 'K' => "⌂",   // Locked Gate
                 'P' => "✉",   // Poem Puzzle
                 'G' => "$",   // Gold Ingot
@@ -54,8 +62,10 @@ namespace JourneyToTheEndOfTheLine.Systems {
                 'F' => "♨",   // Forge
                 'L' => "✎",   // Lore Log
                 'M' => "✶",   // Map Puzzle (Star)
-                'X' => "⌂",   // Hidden tile
-                _ => " "      // Empty space
+                'X' => "⌂",   // Hidden Tile
+                'Q' => "?",   // Tic Tac Toe Mini-Game
+                'Z' => "?",   // Tarot Mini-Game
+                _ => " "      // Empty Space
             };
         }
 
@@ -67,7 +77,7 @@ namespace JourneyToTheEndOfTheLine.Systems {
                 'B' => ConsoleColor.Green,
                 'W' => ConsoleColor.Blue,
                 'C' => ConsoleColor.White,
-                'T' => ConsoleColor.Red,     
+                'T' => ConsoleColor.Red,
                 'R' => ConsoleColor.Magenta,
                 'O' => ConsoleColor.White,
                 'K' => ConsoleColor.Gray,
@@ -78,15 +88,19 @@ namespace JourneyToTheEndOfTheLine.Systems {
                 'L' => ConsoleColor.Gray,
                 'M' => ConsoleColor.Cyan,
                 'X' => ConsoleColor.DarkCyan,
+                'Q' => ConsoleColor.Cyan,    // TicTacToe Mini-Game
+                'Z' => ConsoleColor.Cyan,    // Tarot Mini-Game
                 _ => ConsoleColor.White
             };
         }
 
-        public bool Move(char direction) {
+        public bool Move(char direction)
+        {
             int newX = PlayerX;
             int newY = PlayerY;
 
-            switch (char.ToLower(direction)) {
+            switch (char.ToLower(direction))
+            {
                 case 'w': newY--; break;
                 case 's': newY++; break;
                 case 'a': newX--; break;
@@ -94,7 +108,8 @@ namespace JourneyToTheEndOfTheLine.Systems {
                 default: return false;
             }
 
-            if (newX >= 0 && newX < Width && newY >= 0 && newY < Height && Grid[newY, newX] != '#') {
+            if (newX >= 0 && newX < Width && newY >= 0 && newY < Height && Grid[newY, newX] != '#')
+            {
                 PlayerX = newX;
                 PlayerY = newY;
                 return true;

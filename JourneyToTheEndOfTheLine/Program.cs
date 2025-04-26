@@ -7,26 +7,46 @@ namespace JourneyToTheEndOfTheLine
     class Program
     {
         static void Main(string[] args)
-        {
-            // Set up the console window
-            Console.Title = "Journey to the End of the Line";
+        { 
             try
             {
-                Console.SetWindowSize(120, 40);
-                Console.SetBufferSize(120, 1000);
+                // Set up the console window
+                Console.Title = "Journey to the End of the Line";
+                Console.SetWindowSize(150, 50);
+                Console.SetBufferSize(150, 500);
+                Console.BackgroundColor = ConsoleColor.DarkGray;
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Clear();
             }
             catch (IOException)
             {
-                Console.WriteLine("Console resize not supported.");
+                Console.WriteLine("Console resizing not supported. Continuing normally...");
             }
-            Console.Clear();
+
+            try
+            {
+                Console.Clear();
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("(Console clear not supported.)");
+            }
 
             // Start game
             GameState state = new GameState();
             TitleScreen.Show();
+            Console.Clear();
             Console.Write("What is the name of this adventurer?: ");
             state.PlayerName = Console.ReadLine();
-            Console.Clear();
+
+            try
+            {
+                Console.Clear();
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("(Console clear not supported on this system.)");
+            }
 
             UI.DisplayTitle("JOURNEY TO THE END OF THE LINE");
             UI.TypeText($"Welcome, {state.PlayerName}, to a world on the edge of collapse...\n");
@@ -35,9 +55,12 @@ namespace JourneyToTheEndOfTheLine
             RunActMenu(state);
 
             GameEnding.Show(state);
-            PostCreditScene.Show();
-            EasterEgg.CheckForSecret(state);
 
+            if (state.Act1Completed && state.Act2Completed && state.Act3Completed)
+            {
+                PostCreditScene.Show();
+                EasterEgg.CheckForSecret(state);
+            }
         }
 
         static void RunActMenu(GameState state)
@@ -46,7 +69,15 @@ namespace JourneyToTheEndOfTheLine
 
             while (!done)
             {
-                Console.Clear();
+                try
+                {
+                    Console.Clear();
+                }
+                catch (IOException)
+                {
+                    Console.WriteLine("(Console clear not supported on this system.)");
+                }
+
                 UI.DisplayTitle("Select an Act");
                 Console.WriteLine("[1] " + FormatAct("Act I: The Forest of Tusks", true, state.Act1Completed));
                 Console.WriteLine("[2] " + FormatAct("Act II: The Storm at Sea", state.Act1Completed, state.Act2Completed));
@@ -54,7 +85,14 @@ namespace JourneyToTheEndOfTheLine
                 Console.WriteLine("[0] Exit Game");
                 Console.Write("\nEnter your choice: ");
 
-                string input = Console.ReadLine().Trim();
+                string input = Console.ReadLine();
+                if (input == null)
+                {
+                    Console.WriteLine("(Input not available. Exiting...)");
+                    return; // or Environment.Exit(0); if you want instant shutdown
+                }
+                input = input.Trim();
+
                 switch (input)
                 {
                     case "1":
