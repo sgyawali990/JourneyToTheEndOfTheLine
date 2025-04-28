@@ -1,69 +1,89 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JourneyToTheEndOfTheLine.Maps;
+using JourneyToTheEndOfTheLine.Systems;
 
 namespace JourneyToTheEndOfTheLine.Systems
 {
     public static class MovementSystem
     {
-        public static void Run(Map map, GameState state, Func<char, bool> onInteract, Func<bool> ritualCheck)
+        public static void Run(Map map, GameState state, Func<char, bool> interactAction, Func<bool> exitCondition)
         {
-            bool done = false;
+            bool exit = false;
+            var originalBackground = Console.BackgroundColor;
 
-            while (!done)
+            while (!exit)
             {
+                Console.BackgroundColor = originalBackground;
+                Console.Clear();
                 map.Draw();
-                Console.WriteLine("\nUse W A S D to move. Press E to interact. Press Q to exit (if ritual is complete).\n");
+                Console.SetCursorPosition(0, map.Height + 3);
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("\nUse W A S D or Arrow Keys to move. Press E to interact. Press Q to exit.\n");
                 Console.Write("Input: ");
-                char input = Console.ReadKey(true).KeyChar;
-                bool validMove = false;
+                Console.ResetColor();
 
-                switch (char.ToLower(input))
+                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                char inputChar = char.ToLower(keyInfo.KeyChar);
+
+                bool moveSuccessful = false;
+
+                if (keyInfo.Key == ConsoleKey.Q)
                 {
-                    case 'w':
-                    case 'a':
-                    case 's':
-                    case 'd':
-                        validMove = map.Move(input);
-                        if (!validMove)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("\nYou bump into something. Can't go that way.");
-                            Console.ResetColor();
-                            Thread.Sleep(500); // tiny pause for feel
-                        }
-                        break;
+                    if (exitCondition())
+                    {
+                        exit = true;
+                    }
+                    else
+                    {
+                        UI.TypeText("You can't leave yet — there's more to do here.", ConsoleColor.Yellow);
+                        UI.Pause();
+                    }
+                }
+                else if (keyInfo.Key == ConsoleKey.E)
+                {
+                    bool didInteract = interactAction(map.CurrentTile());
 
-                    case 'e':
-                        char tile = map.CurrentTile();
-                        if (!onInteract(tile))
-                        {
-                            UI.TypeText("There is nothing to interact with here.");
-                            UI.Pause();
-                        }
-                        break;
-
-                    case 'q':
-                        if (ritualCheck())
-                        {
-                            done = true;
-                        }
-                        else
-                        {
-                            UI.TypeText("You can’t leave yet — something’s unfinished.");
-                            UI.Pause();
-                        }
-                        break;
-
-                    default:
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("\nInvalid input. Try W A S D, E, or Q.");
+                    if (!didInteract)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.WriteLine("\nThere is nothing here to interact with.");
                         Console.ResetColor();
                         Thread.Sleep(500);
-                        break;
+                    }
+                }
+                else if (keyInfo.Key == ConsoleKey.UpArrow || inputChar == 'w')
+                {
+                    moveSuccessful = map.Move('w');
+                }
+                else if (keyInfo.Key == ConsoleKey.DownArrow || inputChar == 's')
+                {
+                    moveSuccessful = map.Move('s');
+                }
+                else if (keyInfo.Key == ConsoleKey.LeftArrow || inputChar == 'a')
+                {
+                    moveSuccessful = map.Move('a');
+                }
+                else if (keyInfo.Key == ConsoleKey.RightArrow || inputChar == 'd')
+                {
+                    moveSuccessful = map.Move('d');
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("\nInvalid input. Use W A S D or Arrow Keys to move. Press E to interact, Q to exit.");
+                    Console.ResetColor();
+                    Thread.Sleep(500);
+                }
+
+                if (!moveSuccessful &&
+                    (keyInfo.Key == ConsoleKey.UpArrow || inputChar == 'w' ||
+                     keyInfo.Key == ConsoleKey.DownArrow || inputChar == 's' ||
+                     keyInfo.Key == ConsoleKey.LeftArrow || inputChar == 'a' ||
+                     keyInfo.Key == ConsoleKey.RightArrow || inputChar == 'd'))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\nYou bump into a wall. You can’t go that way.");
+                    Console.ResetColor();
+                    Thread.Sleep(500);
                 }
             }
         }

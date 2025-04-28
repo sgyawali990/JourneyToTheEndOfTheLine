@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using JourneyToTheEndOfTheLine.Maps;
 using JourneyToTheEndOfTheLine.Systems;
 
@@ -10,331 +6,219 @@ namespace JourneyToTheEndOfTheLine.Acts
 {
     public static class Act2
     {
-        private static void ShowMapLegend()
+        public static void Play(GameState state)
         {
-            Console.WriteLine("\n== Map Legend ==");
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine("≈ : Whirlpool (Searchable Clue)");
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("! : Siren Encounter");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("✎ : Captain’s Log");
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("✶ : Star Chart Puzzle");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("⊙ : Glyph Ritual Site");
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Console.WriteLine("⌂ : Hidden Room");
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("Q : Play Tic Tac Toe Mini-Game");
-            Console.WriteLine("Z : Tarot Reflection Mini-Game");
-            Console.ResetColor();
-            UI.Pause();
-        }
+            Console.Clear();
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Loading Act II: The Storm at Sea...");
+            Thread.Sleep(1000);
+            Console.Clear();
 
-        public static void Start(GameState state)
-        {
             ActTransitions.Show("Act II: The Storm at Sea");
 
             UI.DisplayTitle("Act 2: The Storm at Sea");
-            UI.TypeText($"{state.PlayerName}, you step onto the Eternal Tide — a ghostly ship guided by forgotten winds.");
+            UI.TypeText($"{state.PlayerName}, you awaken aboard the Eternal Tide — a ghost ship adrift on endless waves.");
             UI.Pause();
 
             var map = Map_Sea.Generate();
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Clear();
             ShowMapLegend();
+
+            Console.Clear();
+
             int cluesFound = 0;
-            int totalClues = 3;
-            bool sirenEncountered = false;
-            bool starPuzzleSolved = false;
-            bool ritualComplete = false;
+            int totalCluesNeeded = 5;
+            bool starRiddleSolved = false;
+            bool sirenDealtWith = false;
+            bool seaRitualComplete = false;
+            bool sailorNoteRead = false;
+            bool beastmanDefeated = false;
+            bool canExit = false;
 
-            MovementSystem.Run(
-                map,
-                state,
-                (tile) =>
-                {
-                    switch (tile)
-                    {
-                        case 'W':
-                            if (new Random().NextDouble() < 0.5 && cluesFound < totalClues)
-                            {
-                                string clue = $"Sea Clue {cluesFound + 1}";
-                                if (!state.Inventory.HasItem(clue))
-                                {
-                                    state.Inventory.AddItem(clue);
-                                    cluesFound++;
-                                    UI.TypeText($"The whirlpool reveals a fragment of truth: {clue}.", ConsoleColor.Green);
-                                    Console.Beep(600, 150);
-                                    Console.Beep(800, 150);
-                                }
-                                else
-                                {
-                                    UI.TypeText("You sense something, but find nothing new.", ConsoleColor.DarkGray);
-                                }
-                            }
-                            else
-                            {
-                                UI.TypeText("The waters churn, but remain silent.", ConsoleColor.Red);
-                                Console.Beep(500, 200);
-                                Console.Beep(300, 300);
-                            }
-                            return true;
-
-                        case 'S':
-                            if (!sirenEncountered)
-                            {
-                                UI.TypeText("A siren emerges from the storm: \"Spare my sisters, and I shall calm the sea.\"");
-                                Console.Write("Accept her deal? (yes/no): ");
-                                string choice = Console.ReadLine().Trim().ToLower();
-                                if (choice == "yes")
-                                {
-                                    state.Choices["SparedSiren"] = true;
-                                    UI.TypeText("The siren smiles and vanishes. The waves settle.", ConsoleColor.Green);
-                                    Console.Beep(700, 100);
-                                    Console.Beep(950, 300);
-                                    UI.Pause();
-                                }
-                                else
-                                {
-                                    state.Choices["SparedSiren"] = false;
-                                    UI.TypeText("The siren wails and sinks beneath the waves. The storm rages on.", ConsoleColor.Red);
-                                    Console.Beep(700, 100);
-                                    Console.Beep(950, 300);
-                                    UI.Pause();
-                                }
-                                sirenEncountered = true;
-                            }
-                            else
-                            {
-                                UI.TypeText("The waters remember your choice.", ConsoleColor.DarkGray);
-                                UI.Pause();
-                            }
-                            return true;
-
-                        case 'L':
-                            UI.TypeText("You find the captain’s log: \"We sail for the sky, but the sea watches always.\"", ConsoleColor.Gray);
-                            return true;
-
-                        case 'Y':
-                            if (!state.Choices.ContainsKey("YearPuzzleSolved"))
-                            {
-                                UI.TypeText("A weathered plaque is nailed to the mast:");
-                                UI.TypeText("\"The world stands on the precipice. What year will see its end if you fail?\"");
-                                while (true)
-                                {
-                                    Console.Write("Your answer: ");
-                                    string answer = Console.ReadLine().Trim();
-                                    if (answer == "1450")
-                                    {
-                                        UI.TypeText("The plaque glows faintly, acknowledging your insight.");
-                                        state.Choices["YearPuzzleSolved"] = true;
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        UI.TypeText("The sea remains silent, unimpressed by your answer...");
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                UI.TypeText("The plaque is silent. You have already answered.");
-                            }
-                            return true;
-
-                        case 'M':
-                            if (!starPuzzleSolved)
-                            {
-                                UI.TypeText("A chart of constellations appears: \"First of fire, last of light, the twin’s middle marks the night.\"");
-                                while (true)
-                                {
-                                    Console.Write("Name the guiding star: ");
-                                    if (Console.ReadLine().Trim().ToLower() == "pollux") break;
-                                    UI.TypeText("The stars remain silent.", ConsoleColor.Red);
-                                }
-                                UI.TypeText("The sky responds. The path is clear.", ConsoleColor.Green);
-                                Console.Beep(600, 150);
-                                Console.Beep(800, 150);
-                                UI.Pause();
-                                starPuzzleSolved = true;
-                            }
-                            else
-                            {
-                                UI.TypeText("The stars are already aligned.", ConsoleColor.DarkGray);
-                            }
-                            return true;
-
-                        case 'C':
-                            if (!ritualComplete)
-                            {
-                                UI.TypeText("Glyphs glow: SUN | MOON | SEA");
-                                Console.Write("Choose your glyph: ");
-                                string input = Console.ReadLine().Trim().ToLower();
-                                if (input == "sea")
-                                {
-                                    if (state.Choices.ContainsKey("SparedSiren") && state.Choices["SparedSiren"])
-                                    {
-                                        UI.TypeText("The waters part with respect for your mercy.", ConsoleColor.Green);
-                                        Console.Beep(250, 200);
-                                        Console.Beep(400, 200);
-                                        Console.Beep(600, 200);
-                                        Console.Beep(600, 600);
-                                    }
-                                    else
-                                    {
-                                        UI.TypeText("The sea accepts your defiance. You pass.", ConsoleColor.Green);
-                                        UI.Pause();
-                                    }
-                                    ritualComplete = true;
-                                }
-                                else
-                                {
-                                    UI.TypeText("The glyph fades. That was not the one.", ConsoleColor.Red);
-                                }
-                            }
-                            else
-                            {
-                                UI.TypeText("The ritual has already been completed.", ConsoleColor.DarkGray);
-                            }
-                            return true;
-
-                        case 'X':
-                            UI.TypeText("You drift into a silent pocket of the sea. Whispers brush your mind: 'Not all voyages end where they begin.'", ConsoleColor.Gray);
-                            return true;
-
-                        case 'Q':
-                            UI.TypeText("You stumble across a Tic-Tac-Toe board...");
-                            UI.TypeText("Play? (yes/no)");
-                            if (Console.ReadLine().Trim().ToLower() == "yes")
-                            {
-                                TicTacToeMiniGame();
-                            }
-                            return true;
-
-                        case 'Z':
-                            UI.TypeText("A hidden shrine whispers...");
-                            UI.TypeText("Reflect with a Tarot reading? (yes/no)");
-                            if (Console.ReadLine().Trim().ToLower() == "yes")
-                            {
-                                TarotMiniGame(state.PlayerName);
-                            }
-                            return true;
-
-                        default:
-                            return false;
-                    }
-                },
-                () => ritualComplete && starPuzzleSolved
-            );
-
-            UI.TypeText("The ship sails beyond the horizon, into the skies. Your journey is far from—", ConsoleColor.Gray);
-            UI.Pause();
-            Console.Clear();
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-
-            Console.WriteLine("[ERR] Memory Access Violation @ 0x002FFAA3");
-            Console.WriteLine("[SYS] Attempting recovery sequence...");
-            Console.WriteLine("[DBG] Invalid pointer dereferenced");
-            Console.WriteLine("[DBG] Core module integrity: 67%");
-            Console.WriteLine("[SYS] Personality core corrupted: " + new string(state.PlayerName.Reverse().ToArray()));
-            Console.WriteLine("[SYS] Reconstructing...");
-            Thread.Sleep(2500);
-            Console.ResetColor();
-            Console.Beep(1200, 50);
-            Console.Beep(300, 50);
-            Console.Beep(900, 50);
-            Console.Beep(400, 50);
-            Console.Beep(800, 200);
-            Console.Clear();
-
-            UI.TypeText("The ship sails beyond the horizon, into the skies. Your journey is far from over.", ConsoleColor.Green);
-
-            state.Act2Completed = true;
-            UI.Pause();
-        }
-
-        private static void TicTacToeMiniGame()
-        {
-            char[,] board = new char[3, 3];
-            UI.TypeText("Input either 'X' or 'O' into each square. Solve the sequence:");
-
-            for (int row = 0; row < 3; row++)
+            MovementSystem.Run(map, state, (tile) =>
             {
-                for (int col = 0; col < 3; col++)
+                if (tile == '≈') // Water tile with possible clue
                 {
-                    bool validInput = false;
-                    while (!validInput)
+                    if (cluesFound < totalCluesNeeded)
                     {
-                        Console.Write($"Square ({row + 1},{col + 1}) [X/O]: ");
-                        string input = Console.ReadLine().Trim().ToUpper();
-                        if (input == "X" || input == "O")
+                        if (Random.Shared.Next(2) == 0)
                         {
-                            board[row, col] = input[0];
-                            validInput = true;
+                            cluesFound++;
+                            map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                            UI.TypeText("You find a soaked relic clinging to the shipwreck.", ConsoleColor.Green);
+                            Console.Beep(700, 200);
+
+                            if (cluesFound >= totalCluesNeeded)
+                            {
+                                UI.TypeText("You've gathered enough relics to understand the ship's ritual.", ConsoleColor.Cyan);
+                            }
                         }
                         else
                         {
-                            UI.TypeText("Invalid input. Enter 'X' or 'O'.");
+                            UI.TypeText("Nothing but splinters and seawater.", ConsoleColor.Gray);
                         }
                     }
+                    else
+                    {
+                        UI.TypeText("You've gathered all you need.", ConsoleColor.DarkGray);
+                    }
+                    return true;
                 }
-            }
-
-            bool solved = true;
-            for (int row = 0; row < 3; row++)
-            {
-                for (int col = 0; col < 3; col++)
+                else if (tile == 'R') // Ritual Stone - Star Riddle
                 {
-                    if (row == 1 && board[row, col] != 'O')
+                    if (!starRiddleSolved)
                     {
-                        solved = false;
+                        Riddles.StarRiddle(ref starRiddleSolved);
+                        Console.Beep(1000, 200);
                     }
-                    else if (row != 1 && board[row, col] != 'X')
+                    else
                     {
-                        solved = false;
+                        UI.TypeText("The star glyphs shimmer faintly.", ConsoleColor.Gray);
                     }
+                    return true;
                 }
-            }
+                else if (tile == 'F') // Sea Ritual Site
+                {
+                    if (starRiddleSolved && cluesFound >= totalCluesNeeded)
+                    {
+                        if (!seaRitualComplete)
+                        {
+                            UI.TypeText("You complete the Sea Ritual, binding your soul to the eternal tides.", ConsoleColor.Cyan);
+                            seaRitualComplete = true;
+                            Console.Beep(1200, 300);
+                            canExit = true;
+                        }
+                        else
+                        {
+                            UI.TypeText("The ritual is already complete.", ConsoleColor.Gray);
+                        }
+                    }
+                    else
+                    {
+                        UI.TypeText("You feel unworthy to perform the ritual yet.", ConsoleColor.Red);
+                    }
+                    return true;
+                }
+                else if (tile == 'S') // Siren Encounter
+                {
+                    if (!sirenDealtWith)
+                    {
+                        UI.TypeText("A Siren sings from the shattered mast, eyes gleaming with hunger.", ConsoleColor.Magenta);
+                        Console.WriteLine("\nSpare her (S) or Strike her down (K)?");
+                        var choice = Console.ReadKey(true).Key;
+                        if (choice == ConsoleKey.S)
+                        {
+                            UI.TypeText("You show mercy. She fades into mist, her sorrow lingering.", ConsoleColor.Cyan);
+                        }
+                        else
+                        {
+                            UI.TypeText("You strike swiftly. Her wail pierces the storm as she vanishes.", ConsoleColor.Red);
+                        }
+                        sirenDealtWith = true;
+                        Console.Beep(900, 200);
+                        map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                    }
+                    else
+                    {
+                        UI.TypeText("Only echoes remain where the Siren once sang.", ConsoleColor.Gray);
+                    }
+                    return true;
+                }
+                else if (tile == 'Q') // Tic-Tac-Toe Puzzle
+                {
+                    MiniGames.PlayTicTacToePuzzle();
+                    map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                    return true;
+                }
+                else if (tile == 'Z') // Tarot Mini-Game
+                {
+                    MiniGames.PlayTarot();
+                    map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                    return true;
+                }
+                else if (tile == 'P') // Sailor's Ghost Note
+                {
+                    if (!sailorNoteRead)
+                    {
+                        UI.TypeText("You find a tattered letter clinging to a rotted beam:", ConsoleColor.Yellow);
+                        UI.TypeText("\"If you find this, know I never made it ashore. I pray the waves are kinder to you...\"");
+                        sailorNoteRead = true;
+                        Console.Beep(500, 200);
+                    }
+                    else
+                    {
+                        UI.TypeText("These words mean less than before... reading them again weakens their meaning.", ConsoleColor.DarkGray);
+                    }
+                    return true;
+                }
+                else if (tile == '!') // Beastman Threat
+                {
+                    if (!beastmanDefeated)
+                    {
+                        UI.TypeText("The Beastman emerges — faster, stronger than before!", ConsoleColor.Red);
+                        Console.Beep(500, 400);
 
-            if (solved)
-            {
-                UI.TypeText("The grid pulses with energy. A hidden blessing is bestowed upon you.");
-            }
-            else
-            {
-                UI.TypeText("Nothing happens. The grid resets...");
-            }
+                        if (Random.Shared.Next(3) < 2)
+                        {
+                            UI.TypeText("The Beastman overpowers you! You awaken gasping by the broken mast...", ConsoleColor.Red);
+                            Console.Beep(400, 400);
+                            map.ResetPlayerPosition();
+                        }
+                        else
+                        {
+                            UI.TypeText("You dodge the Beastman's blow and it vanishes into mist.", ConsoleColor.Yellow);
+                            beastmanDefeated = true;
+                            map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                        }
+                    }
+                    else
+                    {
+                        UI.TypeText("The deck groans beneath invisible weight.", ConsoleColor.Gray);
+                    }
+                    return true;
+                }
+
+                return false;
+            },
+            () => canExit);
+
+            state.Act2Completed = true;
         }
 
-        private static void TarotMiniGame(string playerName)
+        private static void ShowMapLegend()
         {
-            UI.TypeText("Cards shimmer around you. Choose the card that resonates...");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("≈ : Broken Deck / Water");
 
-            int length = playerName.Length;
-            string correct = "";
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("R : Ritual Stone (Star Riddle)");
 
-            if (length == 1) correct = "the fool";
-            else if (length >= 2 && length <= 3) correct = "chariot";
-            else if (length >= 4 && length <= 5) correct = "hanged man";
-            else if (length >= 6 && length <= 7) correct = "hierophant";
-            else correct = "the world";
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("F : Sea Ritual Site (Final Puzzle)");
 
-            UI.TypeText("Options: The Fool, Chariot, Hanged Man, Hierophant, The World");
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("S : Siren Encounter");
 
-            while (true)
-            {
-                Console.Write("Your choice: ");
-                string input = Console.ReadLine().Trim().ToLower();
-                if (input == correct)
-                {
-                    UI.TypeText("The Tarot accepts your soul. Destiny shifts slightly...");
-                    break;
-                }
-                else
-                {
-                    UI.TypeText("The cards remain unmoved. Try again...");
-                }
-            }
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("Q : Tic-Tac-Toe Puzzle");
+
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("Z : Tarot Reading");
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("P : Sailor's Ghost Note");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("! : Beastman Threat");
+
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("# : Hull Walls");
+
+            Console.ResetColor();
         }
     }
 }

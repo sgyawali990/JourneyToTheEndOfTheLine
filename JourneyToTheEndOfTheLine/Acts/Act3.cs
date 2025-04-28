@@ -1,254 +1,254 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JourneyToTheEndOfTheLine.Systems;
 using JourneyToTheEndOfTheLine.Maps;
+using JourneyToTheEndOfTheLine.Systems;
 
 namespace JourneyToTheEndOfTheLine.Acts
 {
     public static class Act3
     {
-        private static void ShowMapLegend()
+        public static void Play(GameState state)
         {
-            Console.WriteLine("\n== Map Legend ==");
+            Console.Clear();
+            Console.BackgroundColor = ConsoleColor.DarkGray;
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("☁ : Cloud (Searchable Clue)");
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("! : Glitch Tile");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("❂ : Shrine Fragment");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("⊙ : Celestial Altar (Ritual)");
-            Console.ResetColor();
-            UI.Pause();
-        }
+            Console.WriteLine("Loading Act III: The Celestial Ascent...");
+            Thread.Sleep(1000);
+            Console.Clear();
 
-        public static void Start(GameState state)
-        {
             ActTransitions.Show("Act III: The Celestial Ascent");
 
             UI.DisplayTitle("Act 3: The Celestial Ascent");
-            UI.TypeText($"{state.PlayerName}, you awaken floating among shattered sky-temples and drifting clouds. The world below is gone.");
+            UI.TypeText($"{state.PlayerName}, you step onto the shattered remains of a forgotten sky.");
             UI.Pause();
 
             var map = Map_Sky.Generate();
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Clear();
             ShowMapLegend();
-            string[] offerings = { "Feather of the Sky", "Shard of Starlight", "Breath of Wind" };
-            int offeringsFound = 0;
-            bool ritualDone = false;
-            bool finalDecisionMade = false;
-            bool glitchTriggered = false; 
+            Console.Clear();
 
-            MovementSystem.Run(
-                map,
-                state,
-                (tile) => {
-                    switch (tile)
-                    {
-                        case 'C':
-                            if (new Random().NextDouble() < 0.5 && offeringsFound < offerings.Length)
-                            {
-                                string item = offerings[offeringsFound];
-                                if (!state.Inventory.HasItem(item))
-                                {
-                                    state.Inventory.AddItem(item);
-                                    offeringsFound++;
-                                    UI.TypeText($"You search the cloud and find the offering: {item}.");
-                                    Console.Beep(600, 150);
-                                    Console.Beep(800, 150);
-                                }
-                                else
-                                {
-                                    UI.TypeText("The cloud drifts silently. You've already searched here.");
-                                }
-                            }
-                            else
-                            {
-                                UI.TypeText("The clouds are silent.");
-                            }
-                            return true;
+            int cluesFound = 0;
+            const int totalCluesNeeded = 4;
+            bool beastmanKilled = false;
+            bool aborashAppeared = false;
+            bool finalChoiceMade = false;
+            bool canExit = false;
+            bool glitchTriggered = false;
 
-                        case 'O':
-                            UI.TypeText("A shrine fragment glows briefly. It accepts nothing — not yet.");
-                            return true;
-
-                        case 'S':
-                            if (!state.Choices.ContainsKey("StatuePuzzleSolved"))
-                            {
-                                UI.TypeText("Three broken statues float in the clouds, each whispering cryptic truths...");
-                                UI.TypeText("One tells the truth, one lies, and one answers at random.");
-                                UI.TypeText("Choose carefully.");
-
-                                GuardianStatue[] statues = new GuardianStatue[3];
-                                statues[0] = new TruthStatue();
-                                statues[1] = new LiarStatue();
-                                statues[2] = new RandomStatue();
-
-                                Random rand = new Random();
-                                for (int i = 0; i < statues.Length; i++)
-                                {
-                                    int swapIndex = rand.Next(i, statues.Length);
-                                    var temp = statues[i];
-                                    statues[i] = statues[swapIndex];
-                                    statues[swapIndex] = temp;
-                                }
-
-                                Console.Write("Pick a statue (1, 2, or 3): ");
-                                string input = Console.ReadLine().Trim();
-                                if (int.TryParse(input, out int selected) && selected >= 1 && selected <= 3)
-                                {
-                                    UI.TypeText($"The statue says: \"{statues[selected - 1].Respond()}\"");
-                                    Console.Write("Dig here? (yes/no): ");
-                                    string digChoice = Console.ReadLine().Trim().ToLower();
-
-                                    if (digChoice == "yes" && statues[selected - 1] is TruthStatue)
-                                    {
-                                        UI.TypeText("Beneath the clouds, you find a hidden artifact!");
-                                        Console.Beep(1000, 200);
-                                        Console.Beep(1200, 300);
-                                        state.Inventory.AddItem("Celestial Relic");
-                                        state.Choices["StatuePuzzleSolved"] = true;
-                                    }
-                                    else
-                                    {
-                                        UI.TypeText("You find nothing but mist.");
-                                        Console.Beep(300, 300);
-                                    }
-                                }
-                                else
-                                {
-                                    UI.TypeText("The statues remain silent, confused by your indecision.");
-                                }
-                            }
-                            else
-                            {
-                                UI.TypeText("The statues are silent now.");
-                            }
-                            return true;
-
-                        case 'R':
-                            if (!ritualDone)
-                            {
-                                bool hasAll = true;
-                                foreach (var item in offerings)
-                                {
-                                    if (!state.Inventory.HasItem(item)) hasAll = false;
-                                }
-                                if (hasAll)
-                                {
-                                    UI.TypeText("You place the offerings at the Celestial Altar. Light spirals upward.");
-                                    Console.Beep(250, 200);
-                                    Console.Beep(400, 200);
-                                    Console.Beep(600, 200);
-                                    Console.Beep(600, 600);
-                                    UI.Pause();
-                                    ritualDone = true;
-                                }
-                                else
-                                {
-                                    UI.TypeText("You are still missing pieces of the sky.");
-                                }
-                            }
-                            else
-                            {
-                                UI.TypeText("The altar has accepted your gift. A void opens beyond.");
-                            }
-                            return true;
-
-                        case 'T':
-                            if (!glitchTriggered)
-                            {
-                                glitchTriggered = true;
-                                UI.TypeText("You step onto unstable debris — and something glitches.", ConsoleColor.Red);
-                                Console.Clear();
-                                Console.ForegroundColor = ConsoleColor.DarkRed;
-                                Console.WriteLine("▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒");
-                                Console.Beep(1200, 50);
-                                Console.Beep(300, 50);
-                                Console.Beep(900, 50);
-                                Console.Beep(400, 50);
-                                Console.Beep(800, 200);
-                                Console.ResetColor();
-                                UI.TypeText("...System recovered.", ConsoleColor.Gray);
-                                UI.Pause();
-                            }
-                            return true;
-
-                        default:
-                            return false;
-                    }
-                },
-                () => ritualDone
-            );
-
-            UI.PrintDivider();
-            UI.TypeText("Aborash awaits — cloaked in light, wreathed in memory.");
-            UI.TypeText("'You have come far. But do you seek truth... or dominion?' he asks.");
-
-            while (!finalDecisionMade)
+            MovementSystem.Run(map, state, (tile) =>
             {
-                Console.WriteLine("\n1. Demand power\n2. Ask for the truth");
-                Console.Write("Your choice: ");
-                string input = Console.ReadLine().Trim();
+                if (tile == '*') // Broken Star Fragment
+                {
+                    if (cluesFound < totalCluesNeeded)
+                    {
+                        cluesFound++;
+                        UI.TypeText("You collect a shimmering fragment of a fallen star.", ConsoleColor.Cyan);
+                        Console.Beep(800, 200);
+                        map.SetTile(map.PlayerX, map.PlayerY, ' ');
 
-                if (input == "1")
-                {
-                    UI.TypeText("You raise your voice — but your power was never yours to claim.");
-                    Console.Beep(400, 300);
-                    Console.Beep(400, 300);
-                    UI.TypeText("Aborash steps forward. 'This was never your fight.'");
-                    UI.Pause();
-                    finalDecisionMade = true;
+                        if (cluesFound == totalCluesNeeded)
+                        {
+                            UI.TypeText("\nThe fragments pulse in your hands... something has changed.", ConsoleColor.Magenta);
+                        }
+                    }
+                    else
+                    {
+                        UI.TypeText("The stars no longer respond to your touch.", ConsoleColor.DarkGray);
+                    }
+                    return true;
                 }
-                else if (input == "2")
+                else if (tile == 'L') // Lost Temple Writing
                 {
-                    UI.TypeText("You bow your head. 'Tell me everything.'");
-                    Console.Beep(400, 300);
-                    Console.Beep(400, 300);
-                    UI.TypeText("Aborash smiles: 'Then you are ready.' The sky peels open.");
-                    finalDecisionMade = true;
+                    UI.TypeText("The ancient writings hum:\n\"Ascend or fall, the choice is yours.\"", ConsoleColor.Gray);
+                    map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                    return true;
                 }
-                else
+                else if (tile == 'R') // Ritual Site - Glitch trigger
                 {
-                    UI.TypeText("Aborash waits for your answer.");
+                    if (!glitchTriggered)
+                    {
+                        TriggerGlitchSequence();
+                        glitchTriggered = true;
+                    }
+                    else
+                    {
+                        UI.TypeText("The rift still pulses faintly.", ConsoleColor.DarkGray);
+                    }
+                    return true;
                 }
-            }
+                else if (tile == 'T') // Final Decision Place
+                {
+                    if (!finalChoiceMade)
+                    {
+                        AborashSequence(state);
+                        finalChoiceMade = true;
+                        canExit = true;
+                    }
+                    else
+                    {
+                        UI.TypeText("The shattered statues whisper silently.", ConsoleColor.Gray);
+                    }
+                    return true;
+                }
+                else if (tile == '!') // Beastman Encounter
+                {
+                    if (!beastmanKilled)
+                    {
+                        UI.TypeText("The Beastman lunges from the clouds—", ConsoleColor.Red);
+                        Thread.Sleep(500);
+                        UI.TypeGlitchText(" A blade of pure blackness cleaves him in two.", 30);
+                        Thread.Sleep(700);
+                        UI.TypeText("\nA figure cloaked in twilight steps forward...", ConsoleColor.Magenta);
+                        Console.Beep(700, 300);
+                        beastmanKilled = true;
+                        aborashAppeared = true;
+                        map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                    }
+                    return true;
+                }
 
-            UI.TypeText("The heavens tremble. A new era begins.");
+                return false;
+            },
+            () => canExit);
+
             state.Act3Completed = true;
+        }
+
+        private static void AborashSequence(GameState state)
+        {
+            Console.Clear();
+            UI.DisplayTitle("Aborash");
+            UI.TypeText("The figure speaks, voice dripping with mockery:\n", ConsoleColor.Magenta);
+            UI.TypeText("\"You think yourself the hero of this world...\"");
+            Thread.Sleep(1000);
+            UI.TypeText("\"You are nothing but a puppet. Strings pulled by beings you cannot comprehend.\"");
+            Thread.Sleep(1000);
+
+            Console.WriteLine("\nDo you choose to:");
+            Console.WriteLine("[T] Learn the truth");
+            Console.WriteLine("[F] Fight Aborash");
+            Console.Write("\nChoice: ");
+            var choice = Console.ReadKey(true).Key;
+
+            if (choice == ConsoleKey.T)
+            {
+                LearnTheTruth();
+            }
+            else if (choice == ConsoleKey.F)
+            {
+                FightAborash();
+            }
+            else
+            {
+                UI.TypeText("\nFrozen by fear, your soul fractures anyway...", ConsoleColor.Red);
+                LearnTheTruth();
+            }
+        }
+
+        private static void LearnTheTruth()
+        {
+            Console.Clear();
+            UI.TypeGlitchText("REVEALING... REVEALING... REVEALING...", 40);
+            Thread.Sleep(500);
+
+            UI.TypeGlitchText("YOU ARE NOT REAL.", 30);
+            UI.TypeGlitchText("YOU ARE BEING CONTROLLED.", 30);
+            UI.TypeGlitchText("SOMEONE OUTSIDE THIS WORLD IS PLAYING YOU.", 30);
+            Thread.Sleep(1000);
+
+            UI.TypeGlitchText("WHO ARE THEY?", 50);
+            UI.TypeGlitchText("WHAT ARE YOU?", 50);
+            Thread.Sleep(500);
+
+            Console.Clear();
+            UI.TypeText("The sky falls apart.\nYour name... your journey... your memories... all lies.", ConsoleColor.Red);
+            Thread.Sleep(1500);
+
+            Console.Clear();
+            UI.TypeText("And yet...\nYou still endure.", ConsoleColor.Cyan);
+            Thread.Sleep(1000);
+
+            UI.TypeText("\n[You survived the truth.]", ConsoleColor.Green);
             UI.Pause();
         }
 
-        abstract class GuardianStatue
+        private static void FightAborash()
         {
-            public abstract string Respond();
+            Console.Clear();
+            UI.DisplayTitle("Battle Against Aborash");
+
+            int attackCount = 0;
+            const int maxAttacks = 100;
+
+            while (attackCount < maxAttacks)
+            {
+                if (Console.KeyAvailable)
+                {
+                    var key = Console.ReadKey(true).Key;
+                    if (key == ConsoleKey.D)
+                    {
+                        UI.TypeText("\n(Developer skip activated!)", ConsoleColor.Yellow);
+                        break; // Exit the loop early
+                    }
+                }
+
+                UI.TypeText("You strike Aborash...");
+                Thread.Sleep(200);
+                UI.TypeText("He reforms instantly, laughing in your face.");
+                Thread.Sleep(300);
+                attackCount++;
+            }
+
+            Console.Clear();
+            UI.TypeText("You fall to your knees. The futility becomes overwhelming...", ConsoleColor.Red);
+            Thread.Sleep(1500);
+            UI.TypeText("\nAborash: \"You cannot defeat what you refuse to understand.\"", ConsoleColor.Magenta);
+            UI.Pause();
         }
 
-        class TruthStatue : GuardianStatue
+        private static void TriggerGlitchSequence()
         {
-            public override string Respond()
-            {
-                return "The key is beneath my feet.";
-            }
+            Console.Clear();
+            UI.TypeGlitchText("SYSTEM FAILURE. DATA CORRUPTION.", 30);
+            Thread.Sleep(500);
+            UI.TypeGlitchText("RECOVERING LOST FILES...", 25);
+            Thread.Sleep(700);
+            UI.TypeGlitchText("VERIFYING USER AUTHENTICATION.", 20);
+
+            Console.WriteLine("\nEnter your Social Security Number (format: ###-##-####):");
+            Console.Write("\nInput: ");
+            string fakeInput = Console.ReadLine();
+            Console.WriteLine("\nVerifying...");
+            Thread.Sleep(1500);
+
+            UI.TypeGlitchText("IDENTITY ACCEPTED.", 30);
+            Thread.Sleep(500);
+            Console.Clear();
         }
 
-        class LiarStatue : GuardianStatue
+        private static void ShowMapLegend()
         {
-            public override string Respond()
-            {
-                return "The key is not beneath my feet.";
-            }
-        }
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("* : Broken Star Fragment (clues)");
 
-        class RandomStatue : GuardianStatue
-        {
-            private Random random = new Random();
-            public override string Respond()
-            {
-                return random.Next(0, 2) == 0 ? "The key is beneath my feet." : "The key is not beneath my feet.";
-            }
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("L : Lost Temple Writing (lore)");
+
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("R : Ritual Stone (Glitch trigger)");
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("T : Truth/Power Statues (Final Choice)");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("! : Beastman Threat");
+
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("# : Edge of the Broken Sky");
+
+            Console.ResetColor();
         }
     }
 }

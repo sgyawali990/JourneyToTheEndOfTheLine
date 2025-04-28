@@ -10,6 +10,17 @@ namespace JourneyToTheEndOfTheLine.Systems
 {
     public static class UI
     {
+        public static void TypeGlitchText(string text, int speed)
+        {
+            Random random = new Random();
+            foreach (char c in text)
+            {
+                Console.Write(c);
+                Thread.Sleep(speed);
+            }
+            Console.WriteLine();
+        }
+
         public static void TypeText(string text, ConsoleColor color = ConsoleColor.White, int delay = 20)
         {
             var originalColor = Console.ForegroundColor;

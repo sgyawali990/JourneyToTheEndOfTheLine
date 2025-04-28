@@ -1,227 +1,193 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JourneyToTheEndOfTheLine.Systems;
 using JourneyToTheEndOfTheLine.Maps;
+using JourneyToTheEndOfTheLine.Systems;
 
 namespace JourneyToTheEndOfTheLine.Acts
 {
     public static class Act1
     {
-        private static void ShowMapLegend()
+        public static void Play(GameState state)
         {
-            Console.WriteLine("\n== Map Legend ==");
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("♣ : Bush (Searchable Clue)");
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("! : Threat / Beastman");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("$ : Gold Ingot");
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("~ : Heat Source");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("⊙ : Riddle Stone");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("⧫ : Forge Site");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("✉ : Poem Puzzle");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("⌂ : Locked Gate");
-            Console.ResetColor();
+            Console.Clear();
+            Console.BackgroundColor = ConsoleColor.DarkGreen;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("Loading Act I: The Forest of Tusks...");
+            Thread.Sleep(1000);
+            Console.Clear();
 
-            UI.Pause();
-        }
-
-        public static void Start(GameState state)
-        {
             ActTransitions.Show("Act I: The Forest of Tusks");
 
             UI.DisplayTitle("Act 1: The Forest of Tusks");
-            UI.TypeText($"{state.PlayerName}, you arrive at the edge of the Forest of Tusks. The trees whisper, and old spirits stir.");
+            UI.TypeText($"{state.PlayerName}, you step into the haunted groves where tusk-trees pierce the sky...");
             UI.Pause();
 
             var map = Map_Forest.Generate();
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Clear();
             ShowMapLegend();
+
+            Console.Clear();
+
             int cluesFound = 0;
-            int totalClues = 3;
-            bool keyForged = false;
+            int totalCluesNeeded = 3;
             bool fireRiddleSolved = false;
-            bool finalPoemSolved = false;
+            bool keyForged = false;
+            bool poemSolved = false;
+            bool beastmanDefeated = false;
+            bool canExit = false;
 
-            MovementSystem.Run(
-                map,
-                state,
-                (tile) => {
-                    switch (tile)
+            MovementSystem.Run(map, state, (tile) =>
+            {
+                if (tile == 'B') // Bush Clues
+                {
+                    if (cluesFound < totalCluesNeeded)
                     {
-                        case 'B':
-                            if (new Random().NextDouble() < 0.5)
-                            {
-                                string clue = $"Forest Clue {cluesFound + 1}";
-                                if (!state.Inventory.HasItem(clue))
-                                {
-                                    state.Inventory.AddItem(clue);
-                                    cluesFound++;
-                                    UI.TypeText($"You found a clue hidden in the bush: {clue}.", ConsoleColor.Green);
-                                    Console.Beep(600, 150);
-                                    Console.Beep(800, 150);
-                                    return true;
-                                }
-                                else
-                                {
-                                    UI.TypeText("You’ve already found this clue.", ConsoleColor.DarkGray);
-                                }
-                            }
-                            else
-                            {
-                                UI.TypeText("You search the bush but find nothing.", ConsoleColor.Red);
-                                Console.Beep(500, 200);
-                                Console.Beep(300, 300);
-                            }
-                            return true;
-                        case 'G':
-                            if (!state.Inventory.HasItem("Gold Ingot"))
-                            {
-                                state.Inventory.AddItem("Gold Ingot");
-                                UI.TypeText("You found a Gold Ingot!", ConsoleColor.Green);
-                            }
-                            else
-                            {
-                                UI.TypeText("You've already taken the Gold Ingot from here.", ConsoleColor.DarkGray);
-                            }
-                            return true;
-                        case 'C':
-                            if (!state.Inventory.HasItem("Crucible"))
-                            {
-                                state.Inventory.AddItem("Crucible");
-                                UI.TypeText("You found a Crucible!", ConsoleColor.Green);
-                            }
-                            else
-                            {
-                                UI.TypeText("You already have a Crucible.", ConsoleColor.DarkGray);
-                            }
-                            return true;
-                        case 'H':
-                            if (!state.Inventory.HasItem("Heat Source"))
-                            {
-                                state.Inventory.AddItem("Heat Source");
-                                UI.TypeText("You found a Heat Source!", ConsoleColor.Green);
-                            }
-                            else
-                            {
-                                UI.TypeText("You already have a Heat Source.", ConsoleColor.DarkGray);
-                            }
-                            return true;
-                        case 'K':
-                            if (state.Inventory.HasItem("Golden Key"))
-                            {
-                                UI.TypeText("You unlock the gate with the Golden Key.", ConsoleColor.Green);
-                            }
-                            else
-                            {
-                                UI.TypeText("You need to forge the Golden Key first.", ConsoleColor.Red);
-                                Console.Beep(200, 100);
-                            }
-                            return true;
-                        case 'R':
-                            if (!fireRiddleSolved)
-                            {
-                                UI.TypeText("A stone tablet blocks your path. It reads:\n\"I consume all in my path, yet bring warmth to those in need. What am I?\"");
-                                while (true)
-                                {
-                                    Console.Write("Your answer: ");
-                                    string answer = Console.ReadLine().Trim().ToLower();
-                                    if (answer == "fire") break;
-                                    UI.TypeText("The stone remains lifeless. Try again.", ConsoleColor.Red);
-                                }
-                                UI.TypeText("The stone glows. Flames ignite a path through the woods.", ConsoleColor.Green);
-                                Console.Beep(600, 150);
-                                Console.Beep(800, 150);
-                                UI.Pause();
-                                fireRiddleSolved = true;
-                            }
-                            else
-                            {
-                                UI.TypeText("The riddle stone is already lit.", ConsoleColor.DarkGray);
-                            }
-                            return true;
-                        case 'F':
-                            if (!keyForged &&
-                                state.Inventory.HasItem("Gold Ingot") &&
-                                state.Inventory.HasItem("Crucible") &&
-                                state.Inventory.HasItem("Heat Source"))
-                            {
-                                UI.TypeText("You have all materials. Forge the Golden Key? (yes/no)");
-                                if (Console.ReadLine().Trim().ToLower() == "yes")
-                                {
-                                    state.Inventory.RemoveItem("Gold Ingot");
-                                    state.Inventory.RemoveItem("Crucible");
-                                    state.Inventory.RemoveItem("Heat Source");
-                                    state.Inventory.AddItem("Golden Key");
-                                    keyForged = true;
-                                    UI.TypeText("You forge the Golden Key!", ConsoleColor.Green);
-                                    Console.Beep(700, 100);
-                                    Console.Beep(950, 300);
-                                    UI.Pause();
-                                }
+                        if (Random.Shared.Next(2) == 0)
+                        {
+                            cluesFound++;
+                            map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                            UI.TypeText("You found a material hidden in the bushes!", ConsoleColor.Green);
+                            Console.Beep(800, 200);
 
-                                else
-                                {
-                                    UI.TypeText("You decide to wait.", ConsoleColor.DarkGray);
-                                }
-                            }
-                            else if (keyForged)
+                            if (cluesFound >= totalCluesNeeded)
                             {
-                                UI.TypeText("You've already forged the Golden Key.", ConsoleColor.DarkGray);
+                                UI.TypeText("You have gathered enough materials to forge something...", ConsoleColor.Cyan);
                             }
-                            else
-                            {
-                                UI.TypeText("You don't have all the materials to forge the key.", ConsoleColor.Red);
-                            }
-                            return true;
-                        case 'P':
-                            if (!finalPoemSolved)
-                            {
-                                UI.TypeText("A riddle is carved:\n\"Once the gate stands cold and still,\n  deeP within the shadows' will.\n  thE darkened path holds yet the key,\n  oNly the brave may set it free.\"");
-                                while (true)
-                                {
-                                    Console.Write("Speak the word: ");
-                                    if (Console.ReadLine().Trim().ToLower() == "open") break;
-                                    UI.TypeText("Nothing happens...", ConsoleColor.Red);
-                                }
-                                UI.TypeText("The stone gate unlocks with a deep rumble. You step into the dark.", ConsoleColor.Green);
-                                Console.Beep(250, 200);
-                                Console.Beep(400, 200);
-                                Console.Beep(600, 200);
-                                Console.Beep(600, 600);
-                                UI.Pause();
-                                finalPoemSolved = true;
-                            }
-                            else
-                            {
-                                UI.TypeText("The stone gate has already been opened.", ConsoleColor.DarkGray);
-                            }
-                            return true;
-
-                        case 'T':
-                            UI.TypeText("A beastman lunges from the shadows!", ConsoleColor.Red);
-                            UI.TypeText("Instinct takes over — you dodge, and the creature flees into the forest.", ConsoleColor.Gray);
-                            UI.Pause();
-                            return true;
-
-                        default:
-                            return false;
+                        }
+                        else
+                        {
+                            UI.TypeText("Only withered leaves scatter at your touch.", ConsoleColor.Gray);
+                        }
                     }
-                },
-                () => fireRiddleSolved && keyForged && finalPoemSolved && cluesFound >= totalClues
-            );
+                    else
+                    {
+                        UI.TypeText("You search, but find nothing more of value.", ConsoleColor.DarkGray);
+                    }
+                    return true;
+                }
+                else if (tile == 'R') // Ritual Stone - Fire Riddle
+                {
+                    if (!fireRiddleSolved)
+                    {
+                        Riddles.FireRiddle(ref fireRiddleSolved);
+                        Console.Beep(1000, 200);
+                    }
+                    else
+                    {
+                        UI.TypeText("The flames have already whispered their truths.", ConsoleColor.Gray);
+                    }
+                    return true;
+                }
+                else if (tile == 'F') // Forge
+                {
+                    if (fireRiddleSolved && cluesFound >= totalCluesNeeded)
+                    {
+                        if (!keyForged)
+                        {
+                            UI.TypeText("You carefully forge a glowing Golden Key from your gathered materials.", ConsoleColor.Yellow);
+                            state.Inventory.AddItem("Golden Key");
+                            keyForged = true;
+                            map.SetTile(map.PlayerX, map.PlayerY, ' '); // Forge becomes inactive
+                            Console.Beep(900, 300);
+                        }
+                        else
+                        {
+                            UI.TypeText("The forge lies dormant, its work complete.", ConsoleColor.Gray);
+                        }
+                    }
+                    else
+                    {
+                        UI.TypeText("The forge refuses your incomplete offerings.", ConsoleColor.Red);
+                    }
+                    return true;
+                }
+                else if (tile == 'P') // Poem Puzzle
+                {
+                    if (!poemSolved)
+                    {
+                        Puzzles.PoemPuzzle(ref poemSolved);
+                        Console.Beep(1200, 250);
+                    }
+                    else
+                    {
+                        UI.TypeText("The ancient poems have nothing more to teach you.", ConsoleColor.Gray);
+                    }
+                    return true;
+                }
+                else if (tile == 'K') // Locked Gate
+                {
+                    if (state.Inventory.HasItem("Golden Key") && poemSolved)
+                    {
+                        UI.TypeText("You unlock the ancient gate with your Golden Key and whispered word.", ConsoleColor.Cyan);
+                        Console.Beep(1500, 400);
+                        canExit = true;
+                    }
+                    else
+                    {
+                        UI.TypeText("The gate remains shut. You feel you are missing something...", ConsoleColor.Red);
+                    }
+                    return true;
+                }
+                else if (tile == '!') // Beastman
+                {
+                    if (!beastmanDefeated)
+                    {
+                        UI.TypeText("A feral Beastman lunges from the shadows!", ConsoleColor.Red);
+                        Console.Beep(300, 400);
 
-            UI.TypeText("You emerge from the forest — changed. The trees whisper their farewell.");
+                        if (Random.Shared.Next(2) == 0)
+                        {
+                            UI.TypeText("The Beastman slams you down! You awaken at the forest entrance...", ConsoleColor.Red);
+                            Console.Beep(250, 400);
+                            map.ResetPlayerPosition();
+                        }
+                        else
+                        {
+                            UI.TypeText("You narrowly dodge the Beastman's strike. It vanishes into the mist...", ConsoleColor.Yellow);
+                            beastmanDefeated = true;
+                            map.SetTile(map.PlayerX, map.PlayerY, ' ');
+                        }
+                    }
+                    else
+                    {
+                        UI.TypeText("The ruins echo with distant growls.", ConsoleColor.Gray);
+                    }
+                    return true;
+                }
+
+                return false;
+            },
+            () => canExit);
+
             state.Act1Completed = true;
-            UI.Pause();
+        }
+
+        private static void ShowMapLegend()
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("B : Bush (Search for clues)");
+
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("R : Ritual Stone (Solve Fire Riddle)");
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("F : Forge (Create Golden Key)");
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("P : Poem Puzzle");
+
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("K : Locked Gate (Exit)");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("! : Beastman Threat");
+
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine("# : Wall");
+
+            Console.ResetColor();
         }
     }
 }
-

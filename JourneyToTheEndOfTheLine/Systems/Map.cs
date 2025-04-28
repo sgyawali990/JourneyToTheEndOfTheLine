@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JourneyToTheEndOfTheLine.Systems
 {
@@ -14,16 +10,35 @@ namespace JourneyToTheEndOfTheLine.Systems
         public int PlayerX { get; set; }
         public int PlayerY { get; set; }
 
+        private int StartX;
+        private int StartY;
+
         public Map(char[,] grid, int startX, int startY)
         {
             Grid = grid;
             PlayerX = startX;
             PlayerY = startY;
+            StartX = startX;
+            StartY = startY;
+        }
+
+        public void SetTile(int x, int y, char newTile)
+        {
+            if (x >= 0 && x < Width && y >= 0 && y < Height)
+            {
+                Grid[y, x] = newTile;
+            }
+        }
+        public void ResetPlayerPosition()
+        {
+            PlayerX = StartX;
+            PlayerY = StartY;
         }
 
         public void Draw()
         {
-            Console.Clear();
+            Console.SetCursorPosition(0, 0); 
+
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
@@ -31,7 +46,7 @@ namespace JourneyToTheEndOfTheLine.Systems
                     if (x == PlayerX && y == PlayerY)
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.Write("@");
+                        Console.Write("§"); // Player Icon
                     }
                     else
                     {
@@ -41,6 +56,7 @@ namespace JourneyToTheEndOfTheLine.Systems
                 }
                 Console.WriteLine();
             }
+
             Console.ResetColor();
         }
 
@@ -48,24 +64,28 @@ namespace JourneyToTheEndOfTheLine.Systems
         {
             return tile switch
             {
-                '#' => "█",   // Wall
-                'B' => "♣",   // Bush
-                'W' => "≈",   // Whirlpool
-                'C' => "☁",   // Cloud
-                'T' => "!",   // Threat
-                'R' => "⊙",   // Ritual Site
-                'O' => "✦",   // Offering
-                'K' => "⌂",   // Locked Gate
-                'P' => "✉",   // Poem Puzzle
-                'G' => "$",   // Gold Ingot
-                'H' => "~",   // Heat Source
-                'F' => "♨",   // Forge
-                'L' => "✎",   // Lore Log
-                'M' => "✶",   // Map Puzzle (Star)
-                'X' => "⌂",   // Hidden Tile
-                'Q' => "?",   // Tic Tac Toe Mini-Game
-                'Z' => "?",   // Tarot Mini-Game
-                _ => " "      // Empty Space
+                '#' => "▩", // Wall
+                '≈' => "≈", // Broken Deck / Water
+                'B' => "♣", // Bush
+                'W' => "≈", // Water (other)
+                'C' => "☁", // Cloud
+                'T' => "♣", // Tree
+                'R' => "⊙", // Ritual Stone
+                'O' => "✦", // Shrine Piece
+                'K' => "⌂", // Locked Gate
+                'P' => "✉", // Poem
+                'G' => "$", // Gold
+                'H' => "~", // Heat Source
+                'F' => "♨", // Forge / Ritual Site
+                'L' => "✎", // Lore
+                'M' => "✶", // Star Puzzle
+                'X' => "⌂", // Hidden Room
+                'Q' => "☼", // Tic-Tac-Toe
+                'Z' => "☽", // Tarot
+                'S' => "♒", // Siren Encounter
+                '!' => "!", // Beastman
+                ' ' => " ", // Empty
+                _ => "?"   // Fallback
             };
         }
 
@@ -75,11 +95,11 @@ namespace JourneyToTheEndOfTheLine.Systems
             {
                 '#' => ConsoleColor.DarkGray,
                 'B' => ConsoleColor.Green,
-                'W' => ConsoleColor.Blue,
+                'W' => ConsoleColor.Cyan,
                 'C' => ConsoleColor.White,
                 'T' => ConsoleColor.Red,
                 'R' => ConsoleColor.Magenta,
-                'O' => ConsoleColor.White,
+                'O' => ConsoleColor.Magenta,
                 'K' => ConsoleColor.Gray,
                 'P' => ConsoleColor.Magenta,
                 'G' => ConsoleColor.Yellow,
@@ -88,9 +108,10 @@ namespace JourneyToTheEndOfTheLine.Systems
                 'L' => ConsoleColor.Gray,
                 'M' => ConsoleColor.Cyan,
                 'X' => ConsoleColor.DarkCyan,
-                'Q' => ConsoleColor.Cyan,    // TicTacToe Mini-Game
-                'Z' => ConsoleColor.Cyan,    // Tarot Mini-Game
-                _ => ConsoleColor.White
+                'Q' => ConsoleColor.Cyan,
+                'Z' => ConsoleColor.Cyan,
+                ' ' => ConsoleColor.Gray,
+                _ => ConsoleColor.DarkGray
             };
         }
 
